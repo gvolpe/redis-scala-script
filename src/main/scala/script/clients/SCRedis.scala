@@ -41,13 +41,18 @@ object SCRedis {
   private def updateScript(redis: Redis) = {
     import redis.dispatcher
 
-    redis.inTransaction { t =>
-      t.set("a", "the a value")
-      t.get("a")
+    redis.withTransaction { t =>
+      massiveData(t)
+      t.time
     }.onComplete {
       case Success(value) => println(value)
       case Failure(e) => e.printStackTrace()
     }
+  }
+
+  private def massiveData(t: TransactionBuilder) = {
+    for (i <- 0 to 100)
+      t.hSet("script:users:", i.toString(), "value" + i)
   }
 
 }
