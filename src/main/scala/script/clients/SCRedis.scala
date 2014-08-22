@@ -51,8 +51,46 @@ object SCRedis {
   }
 
   private def massiveData(t: TransactionBuilder) = {
-    for (i <- 0 to 100)
+    for (i <- 0 to 10000) {
+      t.hSet("script:users:1", i.toString(), "value" + i)
+      t.hSet("script:users:2", i.toString(), "value" + i)
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////
+
+  def runUpdateScriptV2(x: Int) = {
+
+    // Creates a Redis instance with default configuration.
+    // See reference.conf for the complete list of configurable parameters.
+    val redis = Redis()
+
+    // Import internal ActorSystem's dispatcher (execution context) to register callbacks
+    import redis.dispatcher
+
+    // Execute the specific function
+    updateScriptV2(redis, x)
+
+    // Shutdown all initialized internal clients along with the ActorSystem
+    redis.get("whatever") onComplete { case _ => redis.quit }
+  }
+
+  private def updateScriptV2(redis: Redis, x: Int) = {
+    import redis.dispatcher
+
+    redis.withTransaction { t =>
+      massiveDataV2(t, x)
+      t.time
+    }.onComplete {
+      case Success(value) => println(value)
+      case Failure(e) => e.printStackTrace()
+    }
+  }
+
+  private def massiveDataV2(t: TransactionBuilder, x: Int) = {
+    for (i <- x to (x + 100)) {
       t.hSet("script:users:", i.toString(), "value" + i)
+    }
   }
 
 }
