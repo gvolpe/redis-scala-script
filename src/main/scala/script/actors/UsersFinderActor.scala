@@ -28,7 +28,7 @@ class UsersFinderActor extends Actor with UserKeys {
   def receive = {
     case FindAll =>
       val master = sender
-      findAll.map { users =>
+      findAll map { users =>
         RedisConnectionManager.closeConnection(redis)
         master ! users
       }
