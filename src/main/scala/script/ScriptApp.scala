@@ -1,15 +1,17 @@
 package script
 
-import script.clients.SCRedis
+import akka.actor.ActorSystem
+import script.actors.{Start, MasterActor}
 
-object ScriptApp {
+object ScriptApp extends App {
 
-  def main(args: Array[String]): Unit = {
-    //println("Ejecutando Redis Example...")
-    //SCRedis.runExample
+  println("Starting script within actor system...")
 
-    println("Ejecutando Redis Update Script...")
-    SCRedis.runUpdateScript
-  }
+  val system = ActorSystem("redis-actor-system")
+  val master = system.actorOf(MasterActor.props)
+
+  master ! Start
+
+  system.awaitTermination
 
 }
